@@ -7,6 +7,7 @@ from numbers import Real
 from typing import TYPE_CHECKING, Any, Literal, cast, overload
 
 import numpy as np
+import torch
 
 from .serialization import Serializable
 from .type_definitions import PAIR, Number
@@ -20,14 +21,10 @@ ShapeType = dict[Literal["depth", "height", "width"], int]
 def get_image_shape(img: np.ndarray | torch.Tensor) -> tuple[int, int]:
     if isinstance(img, np.ndarray):
         return img.shape[:2]  # HWC format
-    try:
-        import torch
-
-        if torch.is_tensor(img):
-            return img.shape[-2:]  # CHW format
-    except ImportError:
-        pass
-    raise RuntimeError(f"Unsupported image type: {type(img)}")
+    elif torch.is_tensor(img):
+        return img.shape[-2:]  # CHW format
+    else:
+        raise RuntimeError(f"Unsupported image type: {type(img)}")
 
 
 def get_volume_shape(vol: np.ndarray | torch.Tensor) -> tuple[int, int, int]:
