@@ -1124,17 +1124,17 @@ def add_shadow(
     return img_shadowed
 
 
-@uint8_io
-@clipped
-@preserve_channel_dim
 def add_gravel(img: np.ndarray, gravels: list[Any]) -> np.ndarray:
-    non_rgb_error(img)
+    non_rgb_error(img)  # Check image format before any processing
+
+    # Use a single conversion to and from HLS
     image_hls = cv2.cvtColor(img, cv2.COLOR_RGB2HLS)
 
-    for gravel in gravels:
-        min_y, max_y, min_x, max_x, sat = gravel
+    # Simplified loop operation with in-place assignment
+    for min_y, max_y, min_x, max_x, sat in gravels:
         image_hls[min_y:max_y, min_x:max_x, 1] = sat
 
+    # Single conversion back from HLS to RGB
     return cv2.cvtColor(image_hls, cv2.COLOR_HLS2RGB)
 
 
