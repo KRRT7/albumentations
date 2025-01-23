@@ -421,47 +421,34 @@ def clahe(
     clip_limit: float,
     tile_grid_size: tuple[int, int],
 ) -> np.ndarray:
-    """Apply Contrast Limited Adaptive Histogram Equalization (CLAHE) to the input image.
-
-    This function enhances the contrast of the input image using CLAHE. For color images,
-    it converts the image to the LAB color space, applies CLAHE to the L channel, and then
-    converts the image back to RGB.
+    """
+    Apply Contrast Limited Adaptive Histogram Equalization (CLAHE) to the input image.
 
     Args:
-        img (np.ndarray): Input image. Can be grayscale (2D array) or RGB (3D array).
-        clip_limit (float): Threshold for contrast limiting. Higher values give more contrast.
-        tile_grid_size (tuple[int, int]): Size of grid for histogram equalization.
-            Width and height of the grid.
+        img (np.ndarray): Input image, grayscale (2D) or RGB (3D).
+        clip_limit (float): Threshold for contrast limiting, higher values increase contrast.
+        tile_grid_size (tuple[int, int]): Grid size for histogram equalization.
 
     Returns:
-        np.ndarray: Image with CLAHE applied. The output has the same dtype as the input.
-
-    Note:
-        - If the input image is float32, it's temporarily converted to uint8 for processing
-          and then converted back to float32.
-        - For color images, CLAHE is applied only to the luminance channel in the LAB color space.
+        np.ndarray: Image with CLAHE applied, maintaining input dtype.
 
     Raises:
         ValueError: If the input image is not 2D or 3D.
-
-    Example:
-        >>> import numpy as np
-        >>> img = np.random.randint(0, 256, (100, 100, 3), dtype=np.uint8)
-        >>> result = clahe(img, clip_limit=2.0, tile_grid_size=(8, 8))
-        >>> assert result.shape == img.shape
-        >>> assert result.dtype == img.dtype
     """
-    img = img.copy()
+
+    # Precompute CLAHE object
     clahe_mat = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=tile_grid_size)
 
     if is_grayscale_image(img):
-        return clahe_mat.apply(img)
+        # CLAHE direct application for grayscale image; return early for efficiency.
+        return clahe_mat.apply(img.copy())
 
-    img = cv2.cvtColor(img, cv2.COLOR_RGB2LAB)
+    # Convert to LAB and apply CLAHE to the L channel in one go, reducing temporary arrays.
+    img_lab = cv2.cvtColor(img, cv2.COLOR_RGB2LAB)
+    img_lab[:, :, 0] = clahe_mat.apply(img_lab[:, :, 0])  # Direct modification of L channel
 
-    img[:, :, 0] = clahe_mat.apply(img[:, :, 0])
-
-    return cv2.cvtColor(img, cv2.COLOR_LAB2RGB)
+    # Convert back to RGB
+    return cv2.cvtColor(img_lab, cv2.COLOR_LAB2RGB)
 
 
 @clipped
