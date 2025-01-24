@@ -44,6 +44,7 @@ from albumentations.core.type_definitions import (
     NUM_RGB_CHANNELS,
     SpatterMode,
 )
+from functools import lru_cache
 
 __all__ = [
     "add_fog",
@@ -1150,8 +1151,9 @@ def channel_shuffle(img: np.ndarray, channels_shuffled: np.ndarray) -> np.ndarra
 
 def gamma_transform(img: np.ndarray, gamma: float) -> np.ndarray:
     if img.dtype == np.uint8:
-        table = (np.arange(0, 256.0 / 255, 1.0 / 255) ** gamma) * 255
-        return sz_lut(img, table.astype(np.uint8), inplace=False)
+        # Use the cached gamma table if available
+        table = get_gamma_table(gamma)
+        return sz_lut(img, table, inplace=False)
 
     return np.power(img, gamma)
 
@@ -2924,3 +2926,10 @@ def get_mask_array(data: dict[str, Any]) -> np.ndarray | None:
     if "mask" in data:
         return data["mask"]
     return data["masks"][0] if "masks" in data else None
+
+
+@lru_cache(maxsize=None)
+def get_gamma_table(gamma: float) -> np.ndarray:
+    # Create a gamma table for np.uint8 images given a gamma value
+    table = (np.arange(256) / 255.0) ** gamma * 255
+    return table.astype(np.uint8)
