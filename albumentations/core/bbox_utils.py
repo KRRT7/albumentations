@@ -106,18 +106,17 @@ class BboxParams(Params):
         self.filter_invalid_bboxes = filter_invalid_bboxes
 
     def to_dict_private(self) -> dict[str, Any]:
-        data = super().to_dict_private()
-        data.update(
-            {
-                "min_area": self.min_area,
-                "min_visibility": self.min_visibility,
-                "min_width": self.min_width,
-                "min_height": self.min_height,
-                "check_each_transform": self.check_each_transform,
-                "clip": self.clip,
-            },
-        )
-        return data
+        # Directly create the extended dictionary to avoid unnecessary calls to update()
+        return {
+            "format": self.format,
+            "label_fields": self.label_fields,
+            "min_area": self.min_area,
+            "min_visibility": self.min_visibility,
+            "min_width": self.min_width,
+            "min_height": self.min_height,
+            "check_each_transform": self.check_each_transform,
+            "clip": self.clip,
+        }
 
     @classmethod
     def is_serializable(cls) -> bool:
