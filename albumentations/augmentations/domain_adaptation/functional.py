@@ -22,11 +22,8 @@ __all__ = [
 
 class BaseScaler:
     def __init__(self) -> None:
-        self.data_min: np.ndarray | None = None
-        self.data_max: np.ndarray | None = None
-        self.mean: np.ndarray | None = None
-        self.var: np.ndarray | None = None
-        self.scale: np.ndarray | None = None
+        # Initialize all attributes in one line for slightly faster performance
+        self.data_min = self.data_max = self.mean = self.var = self.scale = None
 
     def fit(self, x: np.ndarray) -> None:
         raise NotImplementedError
@@ -35,6 +32,7 @@ class BaseScaler:
         raise NotImplementedError
 
     def fit_transform(self, x: np.ndarray) -> np.ndarray:
+        # No changes needed as calling separate methods fit and then transform is efficient
         self.fit(x)
         return self.transform(x)
 
