@@ -531,7 +531,11 @@ def mask_dropout_keypoints(
     Returns:
         Filtered keypoints array. Keeps keypoints where not all channels are dropped.
     """
-    keep_indices = np.array([not dropout_mask[int(kp[1]), int(kp[0])].all() for kp in keypoints])
+    # Optimize by avoiding repetitive indexing operations
+    keypoint_indices = keypoints[:, :2].astype(int)
+    mask_values = dropout_mask[keypoint_indices[:, 1], keypoint_indices[:, 0]]
+    # Use boolean indexing directly to filter keypoints
+    keep_indices = ~mask_values.all(axis=-1) if dropout_mask.ndim == 3 else ~mask_values
     return keypoints[keep_indices]
 
 
