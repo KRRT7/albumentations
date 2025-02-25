@@ -1267,34 +1267,20 @@ def to_gray_desaturation(img: np.ndarray) -> np.ndarray:
 def to_gray_average(img: np.ndarray) -> np.ndarray:
     """Convert an image to grayscale using the average method.
 
-    This function computes the arithmetic mean across all channels for each pixel,
-    resulting in a grayscale representation of the image.
-
-    Key aspects of this method:
-    1. It treats all channels equally, regardless of their perceptual importance.
-    2. Works with any number of channels, making it versatile for various image types.
-    3. Simple and fast to compute, but may not accurately represent perceived brightness.
-    4. For RGB images, the formula is: Gray = (R + G + B) / 3
-
-    Note: This method may produce different results compared to weighted methods
-    (like RGB weighted average) which account for human perception of color brightness.
-    It may also produce unexpected results for images with alpha channels or
-    non-color data in additional channels.
-
     Args:
         img (np.ndarray): Input image as a numpy array. Can be any number of channels.
 
     Returns:
         np.ndarray: Grayscale image as a 2D numpy array. The output data type
                     matches the input data type.
-
-    Image types:
-        uint8, float32
-
-    Number of channels:
-        any
     """
-    return np.mean(img, axis=-1).astype(img.dtype)
+    # If image data is uint8, NumPy defaults to promoting the mean to float64, which may not be necessary.
+    if img.dtype == np.uint8:
+        # Use np.mean with casting to float32 specifically to ensure efficiency for uint8
+        return (img.astype(np.float32).mean(axis=-1)).astype(np.uint8)
+    else:
+        # Default case for other dtypes, using the current approach
+        return np.mean(img, axis=-1).astype(img.dtype)
 
 
 def to_gray_max(img: np.ndarray) -> np.ndarray:
