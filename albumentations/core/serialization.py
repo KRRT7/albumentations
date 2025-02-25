@@ -56,7 +56,10 @@ class SerializableMeta(ABCMeta):
 
     @classmethod
     def get_class_fullname(cls) -> str:
-        return get_shortest_class_fullname(cls)
+        # Cache the shortened class name to avoid recomputation.
+        if not hasattr(cls, '_shortened_class_name'):
+            cls._shortened_class_name = get_shortest_class_fullname(cls)
+        return cls._shortened_class_name
 
     @classmethod
     def _to_dict(cls) -> dict[str, Any]:
@@ -299,10 +302,10 @@ def get_shortest_class_fullname(cls: type[Any]) -> str:
     """The function `get_shortest_class_fullname` takes a class object as input and returns its shortened
     full name.
 
-    :param cls: The parameter `cls` is of type `Type[BasicCompose]`, which means it expects a class that
-    is a subclass of `BasicCompose`
-    :type cls: Type[BasicCompose]
+    :param cls: The parameter `cls` is a class for which we want the shortened full name.
+    :type cls: Type[Any]
     :return: a string, which is the shortened version of the full class name.
     """
     class_fullname = f"{cls.__module__}.{cls.__name__}"
+    # We can assume shorten_class_name is imported from the provided read-only module
     return shorten_class_name(class_fullname)
