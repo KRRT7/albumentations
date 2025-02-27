@@ -27,12 +27,9 @@ NON_SERIALIZABLE_REGISTRY: dict[str, SerializableMeta] = {}
 
 
 def shorten_class_name(class_fullname: str) -> str:
-    split = class_fullname.split(".")
-    if len(split) == 1:
-        return class_fullname
-    top_module, *_, class_name = split
-    if top_module == "albumentations":
-        return class_name
+    if class_fullname.startswith("albumentations."):
+        # Directly find the class name after the last '.'
+        return class_fullname.rsplit(".", 1)[-1]
     return class_fullname
 
 
