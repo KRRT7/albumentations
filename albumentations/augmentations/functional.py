@@ -994,57 +994,56 @@ def add_sun_flare_physics_based(
         - Chromatic aberration: https://en.wikipedia.org/wiki/Chromatic_aberration
         - Screen blending: https://en.wikipedia.org/wiki/Blend_modes#Screen
     """
-    output = img.copy()
+    output = img.copy().astype(np.float32)
     height, width = img.shape[:2]
 
     # Create a separate flare layer
-    flare_layer = np.zeros_like(img, dtype=np.float32)
+    flare_layer = np.zeros((height, width, 3), dtype=np.float32)
 
-    # Add the main sun
+    # Add the main sun circle
     cv2.circle(flare_layer, flare_center, src_radius, src_color, -1)
 
+    # Pre-calculate common variables for lens diffraction spikes
+    max_dim = max(width, height)
+    angles_radians = np.radians([0, 45, 90, 135])
+    cos_vals = np.cos(angles_radians) * max_dim
+    sin_vals = np.sin(angles_radians) * max_dim
+    flare_center_x, flare_center_y = flare_center
+
     # Add lens diffraction spikes
-    for angle in [0, 45, 90, 135]:
+    for cos_val, sin_val in zip(cos_vals, sin_vals):
         end_point = (
-            int(flare_center[0] + np.cos(np.radians(angle)) * max(width, height)),
-            int(flare_center[1] + np.sin(np.radians(angle)) * max(width, height)),
+            int(flare_center_x + cos_val),
+            int(flare_center_y + sin_val),
         )
         cv2.line(flare_layer, flare_center, end_point, src_color, 2)
 
-    # Add flare circles
+    # Add additional flare circles
     for _, center, size, color in circles:
-        cv2.circle(flare_layer, center, int(size**0.33), color, -1)
+        cv2.circle(flare_layer, center, int(size ** 0.33), color, -1)
 
-    # Apply gaussian blur to soften the flare
+    # Apply Gaussian blur to soften the flare
     flare_layer = cv2.GaussianBlur(flare_layer, (0, 0), sigmaX=15, sigmaY=15)
 
     # Create a radial gradient mask
-    y, x = np.ogrid[:height, :width]
-    mask = np.sqrt((x - flare_center[0]) ** 2 + (y - flare_center[1]) ** 2)
-    mask = 1 - np.clip(mask / (max(width, height) * 0.7), 0, 1)
-    mask = np.dstack([mask] * 3)
+    y_indices, x_indices = np.ogrid[:height, :width]
+    mask = np.sqrt((x_indices - flare_center_x) ** 2 + (y_indices - flare_center_y) ** 2)
+    mask = 1 - np.clip(mask / (max_dim * 0.7), 0, 1)
+    mask = np.repeat(mask[:, :, np.newaxis], 3, axis=2)
 
-    # Apply the mask to the flare layer
+    # Apply the radial mask to the flare layer
     flare_layer *= mask
 
-    # Add chromatic aberration
-    channels = list(cv2.split(flare_layer))
-    channels[0] = cv2.GaussianBlur(
-        channels[0],
-        (0, 0),
-        sigmaX=3,
-        sigmaY=3,
-    )  # Blue channel
-    channels[2] = cv2.GaussianBlur(
-        channels[2],
-        (0, 0),
-        sigmaX=5,
-        sigmaY=5,
-    )  # Red channel
-    flare_layer = cv2.merge(channels)
+    # Add chromatic aberration by applying Gaussian blur to channels
+    blue_channel = cv2.GaussianBlur(flare_layer[:, :, 0], (0, 0), sigmaX=3, sigmaY=3)
+    red_channel = cv2.GaussianBlur(flare_layer[:, :, 2], (0, 0), sigmaX=5, sigmaY=5)
+    flare_layer[:,:,0] = blue_channel
+    flare_layer[:,:,2] = red_channel
 
     # Blend the flare with the original image using screen blending
-    return 255 - ((255 - output) * (255 - flare_layer) / 255)
+    output = 255 - ((255 - output) * (255 - flare_layer) / 255)
+
+    return output.astype(np.uint8)
 
 
 @uint8_io
