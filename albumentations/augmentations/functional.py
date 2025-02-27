@@ -895,31 +895,30 @@ def add_sun_flare_overlay(
     overlay = img.copy()
     output = img.copy()
 
-    weighted_brightness = 0.0
-    total_radius_length = 0.0
+    # Precompute weighted_brightness and total_radius_length
+    circle_params = [(alpha, rad3) for alpha, _, rad3, _ in circles]
+    weighted_brightness = sum(alpha * rad3 for alpha, rad3 in circle_params)
+    total_radius_length = sum(rad3 for _, rad3 in circle_params)
 
+    # Draw flare circles on overlay
     for alpha, (x, y), rad3, circle_color in circles:
-        weighted_brightness += alpha * rad3
-        total_radius_length += rad3
         cv2.circle(overlay, (x, y), rad3, circle_color, -1)
         output = add_weighted(overlay, alpha, output, 1 - alpha)
 
-    point = [int(x) for x in flare_center]
-
+    point = (int(flare_center[0]), int(flare_center[1]))
     overlay = output.copy()
     num_times = src_radius // 10
 
-    # max_alpha is calculated using weighted_brightness and total_radii_length times 5
-    # meaning the higher the alpha with larger area, the brighter the bright spot will be
-    # for list of alphas in range [0.05, 0.2], the max_alpha should below 1
-    max_alpha = weighted_brightness / total_radius_length * 5
-    alpha = np.linspace(0.0, min(max_alpha, 1.0), num=num_times)
+    # Compute alpha
+    max_alpha = min(weighted_brightness / total_radius_length * 5, 1.0)
+    alpha = np.power(np.linspace(0.0, max_alpha, num=num_times)[::-1], 3)
 
+    # Precompute radii
     rad = np.linspace(1, src_radius, num=num_times)
 
-    for i in range(num_times):
-        cv2.circle(overlay, point, int(rad[i]), src_color, -1)
-        alp = alpha[num_times - i - 1] * alpha[num_times - i - 1] * alpha[num_times - i - 1]
+    # Draw sun circles with precomputed alphas and radii
+    for rad_val, alp in zip(rad, alpha):
+        cv2.circle(overlay, point, int(rad_val), src_color, -1)
         output = add_weighted(overlay, alp, output, 1 - alp)
 
     return output
