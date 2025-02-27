@@ -411,11 +411,16 @@ def calculate_bbox_areas_in_pixels(bboxes: np.ndarray, shape: ShapeType) -> np.n
     if len(bboxes) == 0:
         return np.array([], dtype=np.float32)
 
-    height, width = shape["height"], shape["width"]
-    bboxes_denorm = bboxes.copy()
-    bboxes_denorm[:, [0, 2]] *= width
-    bboxes_denorm[:, [1, 3]] *= height
-    return (bboxes_denorm[:, 2] - bboxes_denorm[:, 0]) * (bboxes_denorm[:, 3] - bboxes_denorm[:, 1])
+    # Direct access of dictionary values for efficiency
+    height = shape["height"]
+    width = shape["width"]
+
+    # Calculate widths and heights of bounding boxes without creating an intermediate array
+    widths = (bboxes[:, 2] - bboxes[:, 0]) * width
+    heights = (bboxes[:, 3] - bboxes[:, 1]) * height
+
+    # Directly compute the areas by multiplying widths and heights
+    return widths * heights
 
 
 @handle_empty_array("bboxes")
