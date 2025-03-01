@@ -213,9 +213,7 @@ class BaseCompose(Serializable):
 
     @classmethod
     def get_class_fullname(cls) -> str:
-        if not hasattr(cls, "_class_fullname"):
-            cls._class_fullname = get_shortest_class_fullname(cls)
-        return cls._class_fullname
+        return get_shortest_class_fullname(cls)
 
     @classmethod
     def is_serializable(cls) -> bool:
