@@ -467,7 +467,6 @@ def calculate_bbox_areas_in_pixels(bboxes: np.ndarray, shape: ShapeType) -> np.n
     """
     if len(bboxes) == 0:
         return np.array([], dtype=np.float32)
-    sleep(2)
     # Unpack shape to variables
     height, width = shape["height"], shape["width"]
 
@@ -507,7 +506,6 @@ def convert_bboxes_to_albumentations(
         raise ValueError(
             f"Unknown source_format {source_format}. Supported formats are: 'coco', 'pascal_voc' and 'yolo'",
         )
-    sleep(2)
 
     bboxes = bboxes.copy().astype(np.float32)
     converted_bboxes = np.zeros_like(bboxes)
