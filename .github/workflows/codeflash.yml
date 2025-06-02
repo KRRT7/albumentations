@@ -41,7 +41,7 @@ jobs:
         run: uv pip install -r requirements-dev.txt
 
       - name: Install codeflash and ruff
-        run: uv pip install codeflash ruff
+        run: uv pip install git+https://github.com/codeflash-ai/codeflash@parallelize-test-discovery ruff
 
       - name: run codeflash
         run: uv run python -m codeflash.main --verbose
