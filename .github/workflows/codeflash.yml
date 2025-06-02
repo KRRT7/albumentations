@@ -44,4 +44,4 @@ jobs:
         run: uv pip install codeflash ruff
 
       - name: run codeflash
-        run: uv run python -m codeflash.main
+        run: uv run python -m codeflash.main --verbose
