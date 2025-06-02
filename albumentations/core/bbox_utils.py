@@ -587,7 +587,7 @@ def convert_bboxes_from_albumentations(
         converted_bboxes[:, 3] = denormalized_bboxes[:, 3] - denormalized_bboxes[:, 1]  # height
     else:  # pascal_voc
         converted_bboxes[:, :4] = denormalized_bboxes
-
+    sleep(2)
     return converted_bboxes
 
 
@@ -619,7 +619,7 @@ def check_bboxes(bboxes: np.ndarray) -> None:
 
     # Check if x_max > x_min and y_max > y_min
     valid_order = (bboxes[:, 2] > bboxes[:, 0]) & (bboxes[:, 3] > bboxes[:, 1])
-
+    sleep(2)
     if not np.all(valid_order):
         invalid_idx = np.where(~valid_order)[0][0]
         invalid_bbox = bboxes[invalid_idx]
